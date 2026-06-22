@@ -260,16 +260,16 @@ function drawBird() {
   ctx.ellipse(2, 4, r - 2, r * 0.6, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Body — yellow circle
+  // Body — blue circle
   const bodyGrad = ctx.createRadialGradient(-4, -4, 2, 0, 0, r);
-  bodyGrad.addColorStop(0, '#ffe566');
-  bodyGrad.addColorStop(0.6, '#fdd835');
-  bodyGrad.addColorStop(1, '#f9a800');
+  bodyGrad.addColorStop(0, '#90CAF9');
+  bodyGrad.addColorStop(0.6, '#2196F3');
+  bodyGrad.addColorStop(1, '#1565C0');
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
   ctx.arc(0, 0, r, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = '#d48000';
+  ctx.strokeStyle = '#0D47A1';
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
@@ -277,13 +277,13 @@ function drawBird() {
   ctx.save();
   ctx.rotate(bird.wingAngle);
   const wingGrad = ctx.createRadialGradient(0, 4, 0, 0, 4, 12);
-  wingGrad.addColorStop(0, '#fdd835');
-  wingGrad.addColorStop(1, '#e8a000');
+  wingGrad.addColorStop(0, '#1E88E5');
+  wingGrad.addColorStop(1, '#0D47A1');
   ctx.fillStyle = wingGrad;
   ctx.beginPath();
   ctx.ellipse(-2, 6, 10, 6, 0.3, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = '#c87800';
+  ctx.strokeStyle = '#0A3880';
   ctx.lineWidth = 1;
   ctx.stroke();
   ctx.restore();
