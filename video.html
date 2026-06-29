@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Codex Calls — CSS Reproduction</title>
+<style>
+/* ============================================================
+   CSS reproduction of an AI-agent ("Codex") phone-call demo.
+   One self-contained, infinitely-looping timeline (TL = 21s).
+   Every animated element shares the same 21s duration so the
+   keyframe percentages keep everything perfectly in sync.
+   ============================================================ */
+:root{
+  --tl: 21s;                 /* master timeline length            */
+  --screen-w: 338px;
+  --screen-h: 732px;
+  --radius: 54px;
+  --ease: cubic-bezier(.4,0,.2,1);
+}
+*{ margin:0; padding:0; box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  background:
+    radial-gradient(120% 90% at 50% 38%, #1a1a20 0%, #0a0a0c 55%, #050506 100%);
+  display:flex; align-items:center; justify-content:center;
+  min-height:100vh; overflow:hidden;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ---------- 3D stage + slow rotation -------------------------- */
+.stage{ perspective:2200px; perspective-origin:50% 45%; }
+.phone-rot{
+  transform-style:preserve-3d;
+  animation:phoneSpin var(--tl) var(--ease) infinite;
+}
+@keyframes phoneSpin{
+  0%   { transform:rotateX(4deg)  rotateY(-16deg) rotateZ(-2deg) scale(.92); }
+  14%  { transform:rotateX(2deg)  rotateY(8deg)   rotateZ(1deg)  scale(.97); }
+  30%  { transform:rotateX(1deg)  rotateY(-6deg)  rotateZ(-1deg) scale(1);   }
+  45%  { transform:rotateX(0deg)  rotateY(2deg)   rotateZ(0deg)  scale(1.02);}
+  62%  { transform:rotateX(1deg)  rotateY(-4deg)  rotateZ(0deg)  scale(1.02);}
+  78%  { transform:rotateX(3deg)  rotateY(10deg)  rotateZ(1.5deg)scale(.98); }
+  90%  { transform:rotateX(2deg)  rotateY(-8deg)  rotateZ(-1deg) scale(.96); }
+  100% { transform:rotateX(4deg)  rotateY(-16deg) rotateZ(-2deg) scale(.92); }
+}
+
+/* ---------- titanium phone body ------------------------------ */
+.phone{
+  position:relative;
+  width:calc(var(--screen-w) + 22px);
+  height:calc(var(--screen-h) + 22px);
+  border-radius:calc(var(--radius) + 8px);
+  background:
+    linear-gradient(135deg,#3a3a40 0%,#1c1c20 22%,#2e2e34 50%,#141416 78%,#34343a 100%);
+  box-shadow:
+    0 2px 2px rgba(255,255,255,.18) inset,
+    0 -2px 3px rgba(0,0,0,.6) inset,
+    0 40px 80px rgba(0,0,0,.7),
+    0 8px 30px rgba(0,0,0,.6);
+  transform-style:preserve-3d;
+}
+/* side buttons */
+.phone::before,.phone::after{
+  content:""; position:absolute; width:3px; border-radius:2px;
+  background:linear-gradient(90deg,#444,#1a1a1c);
+}
+.phone::before{ left:-3px; top:150px; height:62px;
+  box-shadow:0 86px 0 #2a2a2e,0 86px 0 0 #2a2a2e; }
+.btn-vol{ position:absolute; left:-3px; width:3px; border-radius:2px;
+  background:linear-gradient(90deg,#444,#1a1a1c); }
+.btn-power{ position:absolute; right:-3px; top:190px; width:3px; height:88px;
+  border-radius:2px; background:linear-gradient(90deg,#1a1a1c,#444); }
+
+/* ---------- screen ------------------------------------------- */
+.screen{
+  position:absolute; inset:11px;
+  width:var(--screen-w); height:var(--screen-h);
+  border-radius:var(--radius);
+  overflow:hidden; background:#000;
+  box-shadow:0 0 0 2px #000;
+}
+.screen-layer{ position:absolute; inset:0; }
+
+/* dynamic island */
+.island{
+  position:absolute; top:11px; left:50%; transform:translateX(-50%);
+  width:108px; height:32px; background:#000; border-radius:18px;
+  z-index:60; display:flex; align-items:center; justify-content:space-between;
+  padding:0 11px; transition:width .4s var(--ease);
+}
+/* island contents only show during home-screen call (scene D) */
+.island .isl-dot,.island .isl-time{ opacity:0; font-size:12px; color:#fff;
+  animation:islShow var(--tl) linear infinite; }
+.island .isl-dot{ width:14px; height:14px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#7da7ff,#2f6bff); }
+.island .isl-time{ font-variant-numeric:tabular-nums; font-weight:600; letter-spacing:.3px;}
+@keyframes islShow{ 0%,76%{opacity:0;} 79%,100%{opacity:1;} }
+.island.wide{ animation:islWide var(--tl) var(--ease) infinite; }
+@keyframes islWide{
+  0%,76%{ width:108px; } 79%,100%{ width:152px; }
+}
+
+/* ============================================================
+   SCENE WRAPPERS — each fades in only during its window.
+   ============================================================ */
+.scene{ position:absolute; inset:0; opacity:0; }
+
+/* ---------- SCENE A : agent prompt typing -------------------- */
+.sceneA{ background:#000; animation:sceneA var(--tl) linear infinite; }
+@keyframes sceneA{ 0%{opacity:1;} 14.5%{opacity:1;} 17%{opacity:0;} 100%{opacity:0;} }
+
+.input-bar{
+  position:absolute; left:14px; right:14px; bottom:212px;
+  background:#1f1f22; border-radius:22px; padding:14px 14px;
+  display:flex; align-items:center; gap:12px;
+  box-shadow:0 6px 20px rgba(0,0,0,.5);
+}
+.input-bar .plus{ flex:none; width:22px; height:22px; color:#9a9a9f; font-size:24px;
+  line-height:20px; text-align:center; }
+.input-bar .txt{ flex:1; color:#f2f2f4; font-size:15.5px; line-height:1.32;
+  min-height:42px; }
+.input-bar .txt .ln{ display:block; white-space:nowrap; overflow:hidden;
+  width:0; }
+.input-bar .txt .ln1{ animation:type1 var(--tl) steps(30) infinite; }
+.input-bar .txt .ln2{ animation:type2 var(--tl) steps(28) infinite; }
+@keyframes type1{ 0%,5.2%{width:0;} 10.5%{width:14.5em;} 100%{width:14.5em;} }
+@keyframes type2{ 0%,10.5%{width:0;} 15.2%{width:13.4em;} 100%{width:13.4em;} }
+.send{
+  flex:none; width:32px; height:32px; border-radius:50%;
+  background:#0a84ff; display:flex; align-items:center; justify-content:center;
+  align-self:flex-end;
+}
+.send svg{ width:17px; height:17px; }
+
+/* keyboard */
+.keyboard{
+  position:absolute; left:0; right:0; bottom:0; height:198px;
+  background:#1c1c1e; padding:8px 5px 26px;
+  animation:kbDrop var(--tl) var(--ease) infinite;
+}
+@keyframes kbDrop{ 0%{transform:translateY(0);} 14.5%{transform:translateY(0);}
+  17%{transform:translateY(210px);} 100%{transform:translateY(210px);} }
+.suggest{ display:flex; height:38px; color:#fff; font-size:14px; }
+.suggest div{ flex:1; display:flex; align-items:center; justify-content:center; }
+.suggest div:nth-child(1){ font-weight:500; }
+.suggest .sep{ flex:none; width:1px; background:#3a3a3c; margin:9px 0; }
+.kb-row{ display:flex; justify-content:center; gap:6px; margin:5px 3px; }
+.key{ flex:1; max-width:30px; height:38px; background:#5a5a5f; border-radius:5px;
+  color:#fff; font-size:15px; display:flex; align-items:center; justify-content:center;
+  box-shadow:0 1px 0 rgba(0,0,0,.5); }
+
+/* ---------- SCENE B : dialing call pill ---------------------- */
+.sceneB{ background:#000; animation:sceneB var(--tl) linear infinite; }
+@keyframes sceneB{ 0%,16%{opacity:0;} 18%{opacity:1;} 40%{opacity:1;} 42.5%{opacity:0;} 100%{opacity:0;} }
+.call-pill{
+  position:absolute; left:14px; right:14px; bottom:78px;
+  background:linear-gradient(180deg,#2c2740,#241f36); border-radius:16px;
+  padding:11px 12px; display:flex; align-items:center; gap:11px;
+  box-shadow:0 8px 26px rgba(0,0,0,.55);
+  animation:pillRise var(--tl) var(--ease) infinite;
+}
+@keyframes pillRise{ 0%,16%{transform:translateY(20px);opacity:0;}
+  19%{transform:translateY(0);opacity:1;} 100%{transform:translateY(0);opacity:1;} }
+.codex-ico{
+  flex:none; width:38px; height:38px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff,#e7e7ef);
+  display:flex; align-items:center; justify-content:center;
+}
+.codex-ico b{ color:#6a5cff; font-family:"SF Mono",ui-monospace,Menlo,monospace;
+  font-size:18px; font-weight:700; }
+.call-pill .meta{ flex:1; min-width:0; }
+.call-pill .meta .nm{ color:#fff; font-weight:600; font-size:14.5px; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis; }
+.call-pill .meta .st{ color:#a59ec7; font-size:12.5px; margin-top:2px;
+  display:flex; align-items:center; gap:5px; }
+.call-pill .meta .st::before{ content:""; width:6px; height:6px; border-radius:50%;
+  background:#8a7dff; }
+.call-pill .tm{ color:#cfc9e8; font-size:14px; font-variant-numeric:tabular-nums; }
+.call-pill .chev{ color:#9a93bd; font-size:13px; margin-left:2px; }
+
+.msg-bar{
+  position:absolute; left:14px; right:14px; bottom:20px;
+  background:#1c1c1f; border-radius:22px; height:46px;
+  display:flex; align-items:center; gap:10px; padding:0 8px 0 14px;
+}
+.msg-bar .plus{ color:#9a9a9f; font-size:24px; line-height:20px; }
+.msg-bar .ph{ flex:1; color:#7a7a7f; font-size:15px; }
+.msg-bar .mic{ color:#cfcfd4; font-size:16px; }
+.msg-bar .wave{ width:32px; height:32px; border-radius:50%; background:#0a84ff;
+  display:flex; align-items:center; justify-content:center; color:#fff; font-size:15px; }
+.home-ind{ position:absolute; left:50%; bottom:8px; transform:translateX(-50%);
+  width:120px; height:5px; border-radius:3px; background:rgba(255,255,255,.55); }
+
+/* ---------- SCENE C : transcript ----------------------------- */
+.sceneC{ animation:sceneC var(--tl) linear infinite;
+  background:linear-gradient(180deg,#14101f 0%,#1b1530 32%,#3a2b63 78%,#241a40 100%); }
+@keyframes sceneC{ 0%,40%{opacity:0;} 43%{opacity:1;} 71%{opacity:1;} 73.5%{opacity:0;} 100%{opacity:0;} }
+.sceneC::after{ /* purple glow */
+  content:""; position:absolute; top:-10%; left:50%; transform:translateX(-50%);
+  width:120%; height:60%;
+  background:radial-gradient(60% 60% at 50% 0%,rgba(120,90,220,.5),transparent 70%);
+}
+.tx-head{ position:absolute; top:46px; left:18px; right:14px;
+  display:flex; align-items:center; gap:10px; z-index:2; }
+.tx-head .ph-ico{ width:34px; height:34px; border-radius:10px;
+  background:linear-gradient(160deg,#7b6cff,#5a47d6); display:flex;
+  align-items:center; justify-content:center; color:#fff; font-size:16px; }
+.tx-head .htxt{ flex:1; }
+.tx-head .htxt .nm{ color:#fff; font-weight:600; font-size:14.5px; }
+.tx-head .htxt .st{ color:#b9b2d8; font-size:11.5px; margin-top:1px;
+  display:flex; align-items:center; gap:5px; }
+.tx-head .htxt .st::before{ content:""; width:5px; height:5px; border-radius:50%;
+  background:#9d90ff; }
+.tx-head .close{ width:30px; height:30px; border-radius:50%;
+  background:rgba(255,255,255,.12); color:#cfc9e8; display:flex;
+  align-items:center; justify-content:center; font-size:13px; }
+.transcript{ position:absolute; top:104px; left:22px; right:22px; z-index:2; }
+.turn{ margin-bottom:20px; opacity:0; transform:translateY(8px); }
+.turn .who{ font-size:9.5px; letter-spacing:1.4px; font-weight:600;
+  color:#8076a8; margin-bottom:5px; }
+.turn .say{ font-size:17.5px; line-height:1.34; font-weight:600; }
+.t1{ animation:turnIn var(--tl) var(--ease) infinite; }
+.t2{ animation:turnIn2 var(--tl) var(--ease) infinite; }
+.t3{ animation:turnIn3 var(--tl) var(--ease) infinite; }
+.t4{ animation:turnIn4 var(--tl) var(--ease) infinite; }
+/* older turns dim; freshest is brightest (handled by per-turn end color) */
+@keyframes turnIn{ 0%,43%{opacity:0;transform:translateY(8px);}
+  46%{opacity:1;transform:translateY(0);} 100%{opacity:.5;transform:translateY(0);} }
+@keyframes turnIn2{ 0%,49%{opacity:0;transform:translateY(8px);}
+  52%{opacity:1;transform:translateY(0);} 100%{opacity:.62;transform:translateY(0);} }
+@keyframes turnIn3{ 0%,56%{opacity:0;transform:translateY(8px);}
+  59%{opacity:1;transform:translateY(0);} 100%{opacity:.78;transform:translateY(0);} }
+@keyframes turnIn4{ 0%,62%{opacity:0;transform:translateY(8px);}
+  65%{opacity:1;transform:translateY(0);} 100%{opacity:1;transform:translateY(0);} }
+.say{ color:#f4f1ff; }
+
+/* ---------- SCENE D+E : home screen + call panel ------------- */
+.sceneD{ animation:sceneD var(--tl) linear infinite;
+  background:linear-gradient(155deg,#2a0d2e 0%,#5e1742 28%,#8c2535 52%,#5a2a86 78%,#1f3a9e 100%); }
+@keyframes sceneD{ 0%,71%{opacity:0;} 74%{opacity:1;} 100%{opacity:1;} }
+.statusbar{ position:absolute; top:14px; left:0; right:0; height:24px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 26px; color:#fff; font-size:14px; font-weight:600; z-index:2; }
+.statusbar .right{ display:flex; gap:6px; align-items:center; }
+.statusbar .right .sig{ display:flex; align-items:flex-end; gap:2px; height:11px; }
+.statusbar .right .sig i{ width:3px; background:#fff; border-radius:1px; }
+.statusbar .right .sig i:nth-child(1){ height:5px; }
+.statusbar .right .sig i:nth-child(2){ height:7px; }
+.statusbar .right .sig i:nth-child(3){ height:9px; }
+.statusbar .right .sig i:nth-child(4){ height:11px; }
+.statusbar .right .wifi{ width:15px; height:11px;
+  -webkit-mask:radial-gradient(circle at 50% 100%,#000 33%,transparent 34%) ,
+    conic-gradient(from -135deg at 50% 100%,transparent 0 90deg,#000 0 270deg,transparent 0);
+  mask:radial-gradient(circle at 50% 100%,#000 33%,transparent 34%);
+  background:#fff; border-radius:2px; }
+.statusbar .right .batt{ width:24px; height:12px; border:1.4px solid rgba(255,255,255,.5);
+  border-radius:3px; position:relative; padding:1.5px; }
+.statusbar .right .batt::after{ content:""; position:absolute; right:-3px; top:3px;
+  width:2px; height:5px; background:rgba(255,255,255,.5); border-radius:0 1px 1px 0; }
+.statusbar .right .batt i{ display:block; height:100%; width:80%; background:#fff; border-radius:1px; }
+.grid{ position:absolute; top:64px; left:18px; right:18px; z-index:1;
+  display:grid; grid-template-columns:repeat(4,1fr); gap:18px 14px; }
+.app{ text-align:center; }
+.app .ic{ width:54px; height:54px; border-radius:13px; margin:0 auto 5px;
+  display:flex; align-items:center; justify-content:center; font-size:24px;
+  box-shadow:0 3px 8px rgba(0,0,0,.3); }
+.app .lb{ color:#fff; font-size:10px; text-shadow:0 1px 2px rgba(0,0,0,.5); }
+
+/* call control panel (scene E) over the home screen */
+.call-panel{
+  position:absolute; top:46px; left:14px; right:14px; z-index:5;
+  background:rgba(22,22,24,.94); backdrop-filter:blur(18px);
+  border-radius:26px; padding:16px 18px 14px;
+  box-shadow:0 18px 50px rgba(0,0,0,.6);
+  animation:panelIn var(--tl) var(--ease) infinite; opacity:0;
+}
+@keyframes panelIn{ 0%,87%{opacity:0;transform:translateY(-14px) scale(.96);}
+  90%{opacity:1;transform:translateY(0) scale(1);} 100%{opacity:1;transform:translateY(0) scale(1);} }
+.cp-head{ display:flex; align-items:center; gap:11px; margin-bottom:16px; }
+.cp-head .ci{ width:42px; height:42px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff,#e7e7ef);
+  display:flex; align-items:center; justify-content:center; }
+.cp-head .ci b{ color:#6a5cff; font-family:"SF Mono",ui-monospace,monospace; font-weight:700; font-size:19px; }
+.cp-head .info{ flex:1; }
+.cp-head .info .nm{ color:#fff; font-weight:600; font-size:15.5px; white-space:nowrap; }
+.cp-head .info .st{ color:#9b9ba2; font-size:13px; margin-top:2px; }
+.cp-head .tm{ color:#fff; font-size:15px; font-variant-numeric:tabular-nums; }
+.controls{ display:flex; justify-content:space-between; padding:0 4px; }
+.ctrl{ text-align:center; }
+.ctrl .cbtn{ width:52px; height:52px; border-radius:50%; margin:0 auto 7px;
+  background:#3a3a3e; display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size:20px; }
+.ctrl.end .cbtn{ background:#ff3b30; }
+.ctrl .cl{ color:#cfcfd4; font-size:11px; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="phone-rot">
+      <div class="phone">
+        <span class="btn-vol" style="top:150px;height:30px"></span>
+        <span class="btn-vol" style="top:196px;height:58px"></span>
+        <span class="btn-vol" style="top:268px;height:58px"></span>
+        <span class="btn-power"></span>
+
+        <div class="screen">
+
+          <!-- ===== SCENE A : agent prompt typing ===== -->
+          <div class="scene sceneA">
+            <div class="input-bar">
+              <div class="plus">+</div>
+              <div class="txt">
+                <span class="ln ln1">reschedule my morning doctor's</span>
+                <span class="ln ln2">appointment to this afternoon</span>
+              </div>
+              <div class="send">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 19V5M12 5l-6 6M12 5l6 6"
+                  stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+            </div>
+            <div class="keyboard">
+              <div class="suggest">
+                <div>"afternoon"</div><div class="sep"></div>
+                <div>the</div><div class="sep"></div><div>and</div>
+              </div>
+              <div class="kb-row"><span class="key">Q</span><span class="key">W</span><span class="key">E</span><span class="key">R</span><span class="key">T</span><span class="key">Y</span><span class="key">U</span><span class="key">I</span><span class="key">O</span><span class="key">P</span></div>
+              <div class="kb-row" style="padding:0 14px"><span class="key">A</span><span class="key">S</span><span class="key">D</span><span class="key">F</span><span class="key">G</span><span class="key">H</span><span class="key">J</span><span class="key">K</span><span class="key">L</span></div>
+              <div class="kb-row"><span class="key" style="max-width:40px">⇧</span><span class="key">Z</span><span class="key">X</span><span class="key">C</span><span class="key">V</span><span class="key">B</span><span class="key">N</span><span class="key">M</span><span class="key" style="max-width:40px">⌫</span></div>
+              <div class="kb-row"><span class="key" style="max-width:50px">123</span><span class="key" style="max-width:200px">space</span><span class="key" style="max-width:60px">return</span></div>
+            </div>
+          </div>
+
+          <!-- ===== SCENE B : dialing pill ===== -->
+          <div class="scene sceneB">
+            <div class="call-pill">
+              <div class="codex-ico"><b>&gt;_</b></div>
+              <div class="meta">
+                <div class="nm">Valley Family Medicine</div>
+                <div class="st">Dialing…</div>
+              </div>
+              <div class="tm">0:00</div>
+              <div class="chev">⌃</div>
+            </div>
+            <div class="msg-bar">
+              <span class="plus">+</span>
+              <span class="ph">Message</span>
+              <span class="mic">🎙</span>
+              <span class="wave">∿</span>
+            </div>
+            <div class="home-ind"></div>
+          </div>
+
+          <!-- ===== SCENE C : transcript ===== -->
+          <div class="scene sceneC">
+            <div class="tx-head">
+              <div class="ph-ico">📞</div>
+              <div class="htxt">
+                <div class="nm">Valley Family Medicine</div>
+                <div class="st">Talking to reception · 0:08</div>
+              </div>
+              <div class="close">⌄</div>
+            </div>
+            <div class="transcript">
+              <div class="turn t1"><div class="who">CODEX</div>
+                <div class="say">Hi, I'm calling for a patient to move an appointment with Dr. Lin.</div></div>
+              <div class="turn t2"><div class="who">FRONT DESK</div>
+                <div class="say">Sure — can you verify the patient's name?</div></div>
+              <div class="turn t3"><div class="who">CODEX</div>
+                <div class="say">Andrew Ambrosino.</div></div>
+              <div class="turn t4"><div class="who">FRONT DESK</div>
+                <div class="say">Thanks, I see a 9:00 AM today.</div></div>
+            </div>
+          </div>
+
+          <!-- ===== SCENE D+E : home screen + call panel ===== -->
+          <div class="scene sceneD">
+            <div class="statusbar">
+              <div class="time">9:41</div>
+              <div class="right">
+                <span class="sig"><i></i><i></i><i></i><i></i></span>
+                <span class="wifi"></span>
+                <span class="batt"><i></i></span>
+              </div>
+            </div>
+            <div class="grid">
+              <div class="app"><div class="ic" style="background:#34c759">📹</div><div class="lb">FaceTime</div></div>
+              <div class="app"><div class="ic" style="background:#fff;color:#ff3b30;font-size:13px;font-weight:700">6</div><div class="lb">Calendar</div></div>
+              <div class="app"><div class="ic" style="background:#fff">🌸</div><div class="lb">Photos</div></div>
+              <div class="app"><div class="ic" style="background:#1c1c1e">📷</div><div class="lb">Camera</div></div>
+              <div class="app"><div class="ic" style="background:linear-gradient(#33d,#08f)">✉️</div><div class="lb">Mail</div></div>
+              <div class="app"><div class="ic" style="background:#fc3">📝</div><div class="lb">Notes</div></div>
+              <div class="app"><div class="ic" style="background:#fff">☑️</div><div class="lb">Reminders</div></div>
+              <div class="app"><div class="ic" style="background:#1c1c1e">🕙</div><div class="lb">Clock</div></div>
+              <div class="app"><div class="ic" style="background:#fff;color:#e8443b;font-weight:800">N</div><div class="lb">News</div></div>
+              <div class="app"><div class="ic" style="background:#000">📺</div><div class="lb">TV</div></div>
+              <div class="app"><div class="ic" style="background:#b14fe0">🎙</div><div class="lb">Podcasts</div></div>
+              <div class="app"><div class="ic" style="background:linear-gradient(#1aa3ff,#0a6cff)">Ⓐ</div><div class="lb">App Store</div></div>
+              <div class="app"><div class="ic" style="background:linear-gradient(#4cd964,#0a84ff)">🗺</div><div class="lb">Maps</div></div>
+              <div class="app"><div class="ic" style="background:#fff">❤️</div><div class="lb">Health</div></div>
+              <div class="app"><div class="ic" style="background:#1c1c1e">💳</div><div class="lb">Wallet</div></div>
+              <div class="app"><div class="ic" style="background:linear-gradient(#aaa,#666)">⚙️</div><div class="lb">Settings</div></div>
+            </div>
+
+            <!-- call control panel (scene E) -->
+            <div class="call-panel">
+              <div class="cp-head">
+                <div class="ci"><b>&gt;_</b></div>
+                <div class="info">
+                  <div class="nm">Valley Family Medicine</div>
+                  <div class="st">Codex · talking to reception</div>
+                </div>
+                <div class="tm">0:15</div>
+              </div>
+              <div class="controls">
+                <div class="ctrl"><div class="cbtn">🔊</div><div class="cl">Listen</div></div>
+                <div class="ctrl"><div class="cbtn">💬</div><div class="cl">Steer</div></div>
+                <div class="ctrl"><div class="cbtn">👁</div><div class="cl">View</div></div>
+                <div class="ctrl end"><div class="cbtn">📞</div><div class="cl">End</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- dynamic island (above scenes) -->
+          <div class="island wide">
+            <span class="isl-dot"></span>
+            <span class="isl-time">0:13</span>
+          </div>
+
+        </div><!-- /screen -->
+      </div><!-- /phone -->
+    </div>
+  </div>
+</body>
+</html>
